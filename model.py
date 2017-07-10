@@ -69,15 +69,25 @@ class Model:
 
             return logits
 
-    def fit(self, x, y, EPOCH, batch_size, learning_rate=0.001, save_model=True):
+    def fit(self, x, y, valid_set, EPOCH, batch_size, learning_rate=0.001, save_model=True):
         if self.compiled == False:
             print("before training the model, compile first")
             raise Exception
         self.sess.run(tf.global_variables_initializer())
         cost_list = []
+        valid_cost_list = []
 
         n_sample = x.shape[0]
         step_for_epoch = int(n_sample/batch_size)
+
+        if valid_set == None:
+            validation = True
+            valid_x, valid_y = valid_set
+            n_valid_sample = valid_x.shape[0]
+            size_for_valid = int(n_valid_sample/EPOCH)
+            valid_idx = 0
+        else:
+            validation = False
 
         for epoch in range(EPOCH):
             batch_idx = 0
@@ -92,6 +102,13 @@ class Model:
                 if step % 100 == 0:
                     print("Epoch:{}, Step:{}, COST:{}".format(epoch, step, cost))
                     cost_list.append(cost)
+
+            if validation == True:
+                batch_xs, batch_ys = valid_x[valid_idx:valid_idx+size_for_valid], valid_y[valid_idx:valid_idx+size_for_valid]
+                feed_dict = {self.x:batch_xs, self.y:batch_ys, self.keep_prob:1.0}
+                valid_cost = self.sess.run(self.loss, feed_dict=feed_dict)
+                valid_cost_list.append(valid_cost)
+                print("Epoch:{}, Validation COST:{}".format(epoch, valid_cost))
 
             if save_model == True:
                     if(not os.path.exists("./model")):
@@ -111,7 +128,22 @@ class Model:
         plt.grid(True)
         plt.ylim((0,1))
 
-        fig.savefig("./loss_graph.png")
+        fig.savefig("./train_loss_graph.png")
+        print("Save Loss Graph")
+
+        print("Show Loss Graph")
+        plt.show()
+
+        #valid loss graph
+        fig = plt.figure()
+        plt.plot(x, valid_cost_list, label='valid_loss')
+        plt.xlabel("epochs")
+        plt.ylabel("loss")
+        plt.legend(loc='lower right')
+        plt.grid(True)
+        plt.ylim((0,1))
+
+        fig.savefig("./valid_loss_graph.png")
         print("Save Loss Graph")
 
         print("Show Loss Graph")

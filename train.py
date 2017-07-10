@@ -7,17 +7,18 @@ def main(FLAG):
         trainImage = pickle.load(f)
     with open("./trainLabel.data" , 'rb') as f:
         trainLabel = pickle.load(f)
-
-    with open("./testAnswer.data" , 'rb') as f:
-        testAnswer = pickle.load(f)
+    with open("./testImage.data" , 'rb') as f:
+        testImage = pickle.load(f)
+    with open("./testLabel.data" , 'rb') as f:
+        testLabel = pickle.load(f)
 
 
     with tf.Session() as sess:
-        model = Model(sess, FLAG.input_dim, FLAG.hidden_dim, FLAG.output_dim)
+        model = Model(sess, FLAG.input_dim, FLAG.hidden_dim, FLAG.output_dim, load_model=False)
 
         model.compile("mse", "adam")
 
-        model.fit(trainImage, trainLabel, EPOCH=FLAG.EPOCH, batch_size=FLAG.batch_size, learning_rate=FLAG.learning_rate)
+        model.fit(trainImage, trainLabel, valid_set=(testImage, testLabel), EPOCH=FLAG.EPOCH, batch_size=FLAG.batch_size, learning_rate=FLAG.learning_rate, save_model=False)
 
 def FLAG_parser():
     FLAG = tf.app.flags
